@@ -106,8 +106,14 @@ export default {
 				success: (res) => {
 					mediaList.value.push({
 						type: 'image',
-						url: res.tempFilePaths[0],
-						file: res.tempFiles[0]
+						url: res.tempFilePaths[0]
+					})
+				},
+				fail: (err) => {
+					console.error('选择图片失败:', err)
+					uni.showToast({
+						title: '选择图片失败',
+						icon: 'none'
 					})
 				}
 			})
@@ -120,8 +126,14 @@ export default {
 				success: (res) => {
 					mediaList.value.push({
 						type: 'video',
-						url: res.tempFilePath,
-						file: res.tempFile
+						url: res.tempFilePath
+					})
+				},
+				fail: (err) => {
+					console.error('选择视频失败:', err)
+					uni.showToast({
+						title: '选择视频失败',
+						icon: 'none'
 					})
 				}
 			})
@@ -135,8 +147,14 @@ export default {
 				success: (res) => {
 					mediaList.value.push({
 						type: 'audio',
-						url: res.tempFilePaths[0],
-						file: res.tempFiles[0]
+						url: res.tempFilePaths[0]
+					})
+				},
+				fail: (err) => {
+					console.error('选择音频失败:', err)
+					uni.showToast({
+						title: '选择音频失败',
+						icon: 'none'
 					})
 				}
 			})
@@ -174,14 +192,20 @@ export default {
 					id: Date.now(),
 					content: content.value,
 					media: mediaList.value,
-					timestamp: new Date().toISOString(),
-					author: {
+					createTime: new Date().toLocaleString(),
+					user: {
 						name: '用户',
 						avatar: '/static/avatar.png'
-					}
+					},
+					likeCount: 0,
+					commentCount: 0
 				}
 				
 				postStore.addPost(newPost)
+				
+				// 清空输入内容
+				content.value = ''
+				mediaList.value = []
 				
 				uni.showToast({
 					title: '发布成功',
@@ -194,6 +218,7 @@ export default {
 					})
 				}, 1500)
 			} catch (error) {
+				console.error('发布失败:', error)
 				uni.showToast({
 					title: '发布失败，请重试',
 					icon: 'none'
@@ -222,9 +247,12 @@ export default {
 <style lang="scss">
 .post-page {
 	min-height: 100vh;
-	position: relative;
 	width: 100%;
-	overflow-x: hidden;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 20rpx;
+	box-sizing: border-box;
 	background-image: linear-gradient(
 		in oklch longer hue to right,
 		oklch(0.93 0.08 var(--hue1) / 30%),
@@ -237,46 +265,41 @@ export default {
 	);
 	background-size: 100% 100%;
 	animation: anim_bg 5s linear infinite;
-	padding: $spacing-lg;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
+	position: relative;
+	overflow-x: hidden;
 }
 
 .post-container {
-	width: 90%;
-	max-width: 600px;
-	background: rgba(255, 255, 255, 0.15);
-	padding: $spacing-lg;
+	width: 100%;
+	max-width: 600rpx;
+	background: rgba(255, 255, 255, 0.2);
 	backdrop-filter: blur(10px);
+	border-radius: 16rpx;
+	padding: 30rpx;
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	margin-top: 40rpx;
 	position: relative;
 	z-index: 1;
 	border: 1px solid rgba(255, 255, 255, 0.2);
-	border-radius: $border-radius-lg;
 }
 
 .post-content {
-	margin-bottom: $spacing-lg;
-	background: rgba(255, 255, 255, 0.1);
-	border-radius: $border-radius-lg;
-	padding: $spacing-md;
+	width: 100%;
 }
 
 .post-textarea {
 	width: 100%;
-	min-height: 120px;
-	padding: $spacing-md;
-	border: 1px solid rgba(255, 255, 255, 0.2);
-	border-radius: $border-radius-md;
-	font-size: $font-size-md;
-	line-height: 1.5;
-	background-color: rgba(255, 255, 255, 0.05);
-	color: rgba(255, 255, 255, 0.9);
-	
-	&::placeholder {
-		color: rgba(255, 255, 255, 0.5);
-	}
+	min-height: 200rpx;
+	padding: 20rpx;
+	margin-bottom: 20rpx;
+	border-radius: 12rpx;
+	background: rgba(255, 255, 255, 0.9);
+	color: #333;
+	font-size: 28rpx;
+	box-sizing: border-box;
 }
 
 .media-preview {
@@ -326,93 +349,52 @@ export default {
 }
 
 .media-actions {
+	width: 100%;
 	display: flex;
-	justify-content: center;
-	gap: $spacing-lg;
-	padding: $spacing-md;
-	background: rgba(255, 255, 255, 0.1);
-	border-radius: $border-radius-lg;
-	margin-bottom: $spacing-lg;
+	justify-content: space-around;
+	gap: 40rpx;
+	margin: 20rpx 0;
 }
 
 .media-btn {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	gap: $spacing-xs;
-	color: rgba(255, 255, 255, 0.8);
-	transition: all $transition-duration $transition-timing;
-	
-	&:active {
-		color: white;
-		transform: scale(0.95);
-	}
+	color: #333;
 	
 	.iconfont {
-		font-size: $font-size-xl;
+		font-size: 40rpx;
+		margin-bottom: 8rpx;
 	}
 	
 	text {
-		font-size: $font-size-xs;
+		font-size: 24rpx;
 	}
 }
 
 .post-footer {
+	width: 100%;
 	display: flex;
-	flex-direction: column;
+	justify-content: space-between;
 	align-items: center;
-	gap: $spacing-md;
-	background: rgba(255, 255, 255, 0.1);
-	border-radius: $border-radius-lg;
-	padding: $spacing-md;
+	margin-top: 30rpx;
 }
 
 .word-count {
-	color: rgba(255, 255, 255, 0.6);
-	font-size: $font-size-sm;
+	font-size: 24rpx;
+	color: #666;
 }
 
 .post-button {
-	padding: $spacing-sm $spacing-xl;
-	border-radius: $border-radius-lg;
-	border: none;
-	background: linear-gradient(45deg, #667eea, #764ba2);
+	width: 160rpx;
+	height: 70rpx;
+	line-height: 70rpx;
+	background: linear-gradient(135deg, #6366f1, #8b5cf6);
 	color: white;
-	font-size: $font-size-md;
-	transition: all $transition-duration $transition-timing;
-	min-width: 120px;
-	position: relative;
-	overflow: hidden;
-	
-	&::before {
-		content: '';
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		background: linear-gradient(
-			45deg,
-			rgba(255, 255, 255, 0.1) 0%,
-			rgba(255, 255, 255, 0.2) 50%,
-			rgba(255, 255, 255, 0.1) 100%
-		);
-		transform: translateX(-100%);
-		transition: transform 0.5s ease;
-	}
-	
-	&:active {
-		transform: scale(0.95);
-		
-		&::before {
-			transform: translateX(100%);
-		}
-	}
-	
-	&.active {
-		background: linear-gradient(45deg, #667eea, #764ba2);
-		box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-	}
+	border: none;
+	border-radius: 35rpx;
+	font-size: 28rpx;
+	box-shadow: 0 4rpx 12rpx rgba(99, 102, 241, 0.3);
 }
 
 .emoji-picker {
@@ -500,12 +482,24 @@ export default {
 
 @keyframes anim_bg {
 	0% {
-		--hue1: 0deg;
-		--hue2: 300deg;
+		--hue1: 0;
+		--hue2: 60;
+	}
+	25% {
+		--hue1: 60;
+		--hue2: 120;
+	}
+	50% {
+		--hue1: 120;
+		--hue2: 180;
+	}
+	75% {
+		--hue1: 180;
+		--hue2: 240;
 	}
 	100% {
-		--hue1: 360deg;
-		--hue2: 660deg;
+		--hue1: 240;
+		--hue2: 300;
 	}
 }
 </style> 

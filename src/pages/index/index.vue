@@ -2,22 +2,31 @@
 	<view class="container" :class="{ refreshing: isRefreshing }">
 		<view class="post-list">
 			<view class="post-item" v-for="item in postList" :key="item.id">
-					<view class="post-header">
-					<image class="avatar" :src="item.user.avatar" mode="aspectFill"></image>
-						<view class="user-info">
-						<text class="username">{{ item.user.name }}</text>
-							<text class="time">{{ item.createTime }}</text>
+				<view class="post-header">
+					<image class="avatar" :src="item.user?.avatar || '/static/avatar.png'" mode="aspectFill"></image>
+					<view class="user-info">
+						<text class="username">{{ item.user?.name || '用户' }}</text>
+						<text class="time">{{ item.createTime }}</text>
+					</view>
+				</view>
+				<view class="post-content">{{ item.content }}</view>
+				<view class="media-content" v-if="item.media && item.media.length > 0">
+					<view v-for="(media, index) in item.media" :key="index" class="media-item">
+						<image v-if="media.type === 'image'" :src="media.url" mode="aspectFill" @tap="previewImage(media.url)"></image>
+						<video v-if="media.type === 'video'" :src="media.url" controls :poster="media.url"></video>
+						<view v-if="media.type === 'audio'" class="audio-player">
+							<text>语音消息</text>
 						</view>
 					</view>
-					<view class="post-content">{{ item.content }}</view>
-					<view class="post-footer">
-						<view class="action-btn">
-							<text class="iconfont">❤</text>
-						<text class="count">{{ item.likeCount }}</text>
-						</view>
-						<view class="action-btn">
-							<text class="iconfont">💬</text>
-							<text class="count">{{ item.commentCount }}</text>
+				</view>
+				<view class="post-footer">
+					<view class="action-btn">
+						<text class="iconfont">❤</text>
+						<text class="count">{{ item.likeCount || 0 }}</text>
+					</view>
+					<view class="action-btn">
+						<text class="iconfont">💬</text>
+						<text class="count">{{ item.commentCount || 0 }}</text>
 					</view>
 				</view>
 			</view>
@@ -41,6 +50,14 @@ import { usePostStore } from '@/stores/post'
 const postStore = usePostStore()
 const isRefreshing = ref(false)
 const postList = ref([])
+
+// 预览图片
+const previewImage = (url) => {
+	uni.previewImage({
+		urls: [url],
+		current: url
+	})
+}
 
 // 获取帖子列表
 const getPosts = async (page = 1) => {
@@ -162,6 +179,9 @@ onMounted(() => {
 	color: #333;
 	line-height: 1.6;
 	margin-bottom: 16rpx;
+	white-space: pre-wrap;
+	word-break: break-all;
+	overflow-wrap: break-word;
 }
 
 .post-footer {
@@ -247,6 +267,40 @@ onMounted(() => {
 	}
 	100% {
 		transform: rotate(360deg);
+	}
+}
+
+.media-content {
+	margin: 16rpx 0;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 16rpx;
+	
+	.media-item {
+		position: relative;
+		width: 100%;
+		
+		image {
+			width: 100%;
+			height: 400rpx;
+			border-radius: 8rpx;
+			object-fit: cover;
+		}
+		
+		video {
+			width: 100%;
+			height: 400rpx;
+			border-radius: 8rpx;
+		}
+		
+		.audio-player {
+			padding: 16rpx;
+			background: #f5f5f5;
+			border-radius: 8rpx;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
 	}
 }
 </style>
